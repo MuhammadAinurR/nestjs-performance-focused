@@ -7,7 +7,7 @@ import { TokenService } from './token.service.js';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService, private readonly tokenService: TokenService) {}
+  constructor(private readonly prisma: PrismaService, private readonly tokenService: TokenService) { }
 
   async createUser(createUserDto: CreateUserDto) {
     // Check if database is available
@@ -15,7 +15,7 @@ export class AuthService {
       throw new ServiceUnavailableException('Database is currently unavailable. Please try again later.');
     }
 
-    const { fullName, phoneNumber, email, password } = createUserDto;
+    const { full_name, phone_number, email, password } = createUserDto;
 
     // Check if user already exists
     const existingUser = await this.prisma.safeOperation(async () => {
@@ -23,7 +23,7 @@ export class AuthService {
         where: {
           OR: [
             { email },
-            { phoneNumber }
+            { phone_number }
           ]
         }
       });
@@ -43,7 +43,7 @@ export class AuthService {
         const user = await tx.user.create({
           data: {
             email,
-            phoneNumber,
+            phone_number,
             password: hashedPassword,
           },
         });
@@ -51,15 +51,15 @@ export class AuthService {
         const userDetails = await tx.userDetails.create({
           data: {
             userId: user.id,
-            fullName,
+            full_name,
           },
         });
 
         return {
           id: user.id,
           email: user.email,
-          phoneNumber: user.phoneNumber,
-          fullName: userDetails.fullName,
+          phone_number: user.phone_number,
+          full_name: userDetails.full_name,
           createdAt: user.createdAt,
         };
       });
@@ -69,8 +69,8 @@ export class AuthService {
       throw new ServiceUnavailableException('Failed to create user due to database connectivity issues');
     }
 
-  const token = this.tokenService.signAccessToken({ sub: result.id, email: result.email });
-  return { user: result, auth: token };
+    const token = this.tokenService.signAccessToken({ sub: result.id, email: result.email });
+    return { user: result, auth: token };
   }
 
   async login(loginDto: LoginDto) {
@@ -79,19 +79,19 @@ export class AuthService {
       throw new ServiceUnavailableException('Database is currently unavailable. Please try again later.');
     }
 
-    const { email, phoneNumber, password } = loginDto;
+    const { email, phone_number, password } = loginDto;
 
-    // Validate that either email or phoneNumber is provided
-    if (!email && !phoneNumber) {
+    // Validate that either email or phone_number is provided
+    if (!email && !phone_number) {
       throw new BadRequestException('Either email or phone number must be provided');
     }
 
-    // Find user by email or phoneNumber
+    // Find user by email or phone_number
     const user = await this.prisma.safeOperation(async () => {
       return await this.prisma.user.findFirst({
-        where: email 
+        where: email
           ? { email }
-          : { phoneNumber },
+          : { phone_number },
         include: {
           userDetails: true,
         },
@@ -111,8 +111,8 @@ export class AuthService {
     const baseUser = {
       id: user.id,
       email: user.email,
-      phoneNumber: user.phoneNumber,
-      fullName: user.userDetails?.fullName,
+      phone_number: user.phone_number,
+      full_name: user.userDetails?.full_name,
       createdAt: user.createdAt,
     };
 

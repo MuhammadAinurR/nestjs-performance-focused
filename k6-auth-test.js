@@ -13,8 +13,8 @@ const BASE_URL = __ENV.TARGET_URL || 'http://localhost:3000';
 
 // Test data
 const testUser = {
-  fullName: `Test User ${Date.now()}`,
-  phoneNumber: `+123456${Math.floor(Math.random() * 10000)}`,
+  full_name: `Test User ${Date.now()}`,
+  phone_number: `+123456${Math.floor(Math.random() * 10000)}`,
   email: `test${Date.now()}@example.com`,
   password: 'password123'
 };

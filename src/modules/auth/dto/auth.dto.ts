@@ -3,11 +3,11 @@ import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-vali
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
-  fullName!: string;
+  full_name!: string;
 
   @IsString()
   @IsNotEmpty()
-  phoneNumber!: string;
+  phone_number!: string;
 
   @IsEmail()
   @IsNotEmpty()
@@ -25,7 +25,7 @@ export class LoginDto {
 
   @IsOptional()
   @IsString()
-  phoneNumber?: string;
+  phone_number?: string;
 
   @IsString()
   @IsNotEmpty()

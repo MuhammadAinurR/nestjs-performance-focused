@@ -10,31 +10,31 @@ async function main() {
   const users = [
     {
       email: 'john.doe@example.com',
-      phoneNumber: '+1234567890',
-      fullName: 'John Doe',
+      phone_number: '+1234567890',
+      full_name: 'John Doe',
       password: 'password123',
     },
     {
-      email: 'jane.smith@example.com', 
-      phoneNumber: '+1234567891',
-      fullName: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      phone_number: '+1234567891',
+      full_name: 'Jane Smith',
       password: 'password123',
     },
     {
       email: 'admin@example.com',
-      phoneNumber: '+1234567892', 
-      fullName: 'Admin User',
+      phone_number: '+1234567892',
+      full_name: 'Admin User',
       password: 'admin123',
     },
   ];
 
   for (const userData of users) {
-    const { fullName, phoneNumber, email, password } = userData;
-    
+    const { full_name, phone_number, email, password } = userData;
+
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { phoneNumber }]
+        OR: [{ email }, { phone_number }]
       }
     });
 
@@ -50,11 +50,11 @@ async function main() {
     const user = await prisma.user.create({
       data: {
         email,
-        phoneNumber,
+        phone_number,
         password: hashedPassword,
         userDetails: {
           create: {
-            fullName,
+            full_name,
           },
         },
       },
@@ -63,7 +63,7 @@ async function main() {
       },
     });
 
-    console.log(`✅ Created user: ${user.email} (${user.userDetails?.fullName})`);
+    console.log(`✅ Created user: ${user.email} (${user.userDetails?.full_name})`);
   }
 
   console.log('🎉 Database seeding completed!');
