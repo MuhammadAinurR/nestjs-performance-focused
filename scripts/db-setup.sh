@@ -1,5 +1,37 @@
 #!/bin/bash
 
+# Load environment variables from .env file
+load_env_file() {
+    local env_file="${1:-.env}"
+    
+    if [ -f "$env_file" ]; then
+        # Export variables from .env file
+        set -a
+        source "$env_file"
+        set +a
+        echo -e "${GREEN}✅ Environment variables loaded from $env_file${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Warning: $env_file not found${NC}"
+    fi
+}
+
+# Parse DATABASE_URL
+parse_database_url() {
+    local database_url="$1"
+    
+    if [[ $database_url =~ postgresql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+) ]]; then
+        DB_USER="${BASH_REMATCH[1]}"
+        DB_PASSWORD="${BASH_REMATCH[2]}"
+        DB_HOST="${BASH_REMATCH[3]}"
+        DB_PORT="${BASH_REMATCH[4]}"
+        DB_NAME="${BASH_REMATCH[5]}"
+        return 0
+    else
+        echo -e "${RED}❌ Failed to parse DATABASE_URL${NC}"
+        return 1
+    fi
+}
+
 # Database configuration
 DB_HOST=${DB_HOST:-localhost}
 DB_PORT=${DB_PORT:-5432}
@@ -208,11 +240,11 @@ setup_database() {
     fi
     
     # Run Prisma migrations
-    echo -e "${BLUE}🔧 Running Prisma migrations...${NC}"
-    if npx prisma migrate deploy; then
-        echo -e "${GREEN}✅ Migrations completed successfully${NC}"
+    echo -e "${BLUE}🔧 Running Prisma schema push...${NC}"
+    if npx prisma db push; then
+        echo -e "${GREEN}✅ Database schema pushed successfully${NC}"
     else
-        echo -e "${RED}❌ Migration failed${NC}"
+        echo -e "${RED}❌ Schema push failed${NC}"
         return 1
     fi
     
@@ -231,7 +263,7 @@ setup_database() {
 # Function to seed database
 seed_database() {
     echo -e "${BLUE}🌱 Seeding database...${NC}"
-    if npx prisma db seed; then
+    if npx tsx prisma/seed.ts; then
         echo -e "${GREEN}✅ Database seeded successfully${NC}"
         return 0
     else
@@ -243,6 +275,13 @@ seed_database() {
 # Main function
 main() {
     local command=${1:-help}
+    
+    # Load environment variables and parse DATABASE_URL
+    load_env_file
+    
+    if [ -n "$DATABASE_URL" ]; then
+        parse_database_url "$DATABASE_URL"
+    fi
     
     case $command in
         "check")
@@ -276,10 +315,13 @@ main() {
             echo -e "  help      - Show this help message"
             echo -e ""
             echo -e "Environment variables:"
+            echo -e "  DATABASE_URL - Full PostgreSQL connection string (loaded from .env)"
+            echo -e ""
+            echo -e "Legacy environment variables:"
             echo -e "  DB_HOST     - Database host (default: localhost)"
             echo -e "  DB_PORT     - Database port (default: 5432)"
-            echo -e "  DB_USER     - Database user (default: postgres)"
-            echo -e "  DB_PASSWORD - Database password (default: postgres)"
+            echo -e "  DB_USER     - Database user (default: current user)"
+            echo -e "  DB_PASSWORD - Database password (default: empty)"
             echo -e "  DB_NAME     - Database name (default: mdcn)"
             ;;
     esac

@@ -1,5 +1,18 @@
 # Database Operations Makefile
 
+# Detect operating system and set script command
+ifeq ($(OS),Windows_NT)
+    DB_SCRIPT_CMD = powershell -ExecutionPolicy Bypass -File ./scripts/db-setup.ps1
+else
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        DB_SCRIPT_CMD = ./scripts/db-setup.sh
+    endif
+    ifeq ($(UNAME_S),Darwin)
+        DB_SCRIPT_CMD = ./scripts/db-setup.sh
+    endif
+endif
+
 # Default target
 .PHONY: help
 help:
@@ -18,12 +31,12 @@ help:
 # Check database connectivity
 .PHONY: check
 check:
-	./scripts/db-setup.sh check
+	$(DB_SCRIPT_CMD) check
 
 # Create database if it doesn't exist
 .PHONY: create
 create:
-	./scripts/db-setup.sh create
+	$(DB_SCRIPT_CMD) create
 
 # Generate Prisma client
 .PHONY: generate
@@ -43,17 +56,17 @@ push:
 # Reset database (force recreate)
 .PHONY: reset
 reset:
-	./scripts/db-setup.sh reset
+	$(DB_SCRIPT_CMD) reset
 
 # Seed database
 .PHONY: seed
 seed:
-	./scripts/db-setup.sh seed
+	$(DB_SCRIPT_CMD) seed
 
 # Reset and reseed database
 .PHONY: reroll
 reroll:
-	./scripts/db-setup.sh reroll
+	$(DB_SCRIPT_CMD) reroll
 
 # Open Prisma Studio
 .PHONY: studio
