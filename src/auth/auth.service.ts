@@ -48,12 +48,21 @@ export class AuthService {
     // Generate tokens
     const tokens = await this.generateTokens(user.id, user.email);
 
+    // Transform to snake_case for response
+    const responseUser = {
+      id: user.id,
+      email: user.email,
+      full_name: user.fullName,
+      phone_number: user.phoneNumber,
+      created_at: user.createdAt,
+    };
+
     return {
       rc: 'SUCCESS',
       message: 'User registered successfully',
       timestamp: new Date().toISOString(),
       payload: {
-        user,
+        user: responseUser,
         tokens,
       },
     };
@@ -74,15 +83,23 @@ export class AuthService {
     // Generate tokens
     const tokens = await this.generateTokens(user.id, user.email);
 
-    // Remove password from response
+    // Remove password from response and transform to snake_case
     const { password: _, ...userWithoutPassword } = user;
+    const responseUser = {
+      id: userWithoutPassword.id,
+      email: userWithoutPassword.email,
+      full_name: userWithoutPassword.fullName,
+      phone_number: userWithoutPassword.phoneNumber,
+      created_at: userWithoutPassword.createdAt,
+      updated_at: userWithoutPassword.updatedAt,
+    };
 
     return {
       rc: 'SUCCESS',
       message: 'Login successful',
       timestamp: new Date().toISOString(),
       payload: {
-        user: userWithoutPassword,
+        user: responseUser,
         tokens,
       },
     };
@@ -103,6 +120,8 @@ export class AuthService {
           email: true,
           fullName: true,
           phoneNumber: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
 
@@ -113,18 +132,81 @@ export class AuthService {
       // Generate new tokens
       const tokens = await this.generateTokens(user.id, user.email);
 
+      // Transform to snake_case for response
+      const responseUser = {
+        id: user.id,
+        email: user.email,
+        full_name: user.fullName,
+        phone_number: user.phoneNumber,
+        created_at: user.createdAt,
+        updated_at: user.updatedAt,
+      };
+
       return {
         rc: 'SUCCESS',
         message: 'Token refreshed successfully',
         timestamp: new Date().toISOString(),
         payload: {
-          user,
+          user: responseUser,
           tokens,
         },
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        phoneNumber: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Transform to snake_case for response
+    const responseUser = {
+      id: user.id,
+      email: user.email,
+      full_name: user.fullName,
+      phone_number: user.phoneNumber,
+      created_at: user.createdAt,
+      updated_at: user.updatedAt,
+    };
+
+    return {
+      rc: 'SUCCESS',
+      message: 'Profile retrieved successfully',
+      timestamp: new Date().toISOString(),
+      payload: {
+        user: responseUser,
+      },
+    };
+  }
+
+  async logout(accessToken: string) {
+    // In a production environment, you would:
+    // 1. Add the token to a blacklist in Redis
+    // 2. Set expiration time equal to the token's remaining TTL
+    // For now, we'll just return a success response
+
+    return {
+      rc: 'SUCCESS',
+      message: 'Logout successful',
+      timestamp: new Date().toISOString(),
+      payload: {
+        message: 'Token invalidated successfully',
+      },
+    };
   }
 
   private async generateTokens(userId: string, email: string) {
