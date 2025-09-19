@@ -2,9 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["relationJoins"]
-  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -13,26 +12,23 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
+  id           String   @id @default(cuid())
   email        String   @unique
-  phone_number  String   @unique @map("phone_number")
+  fullName     String   @map("full_name")
+  phoneNumber  String   @map("phone_number")
   password     String
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
-  
-  userDetails  UserDetails?
 
-  @@index([email])
-  @@index([phone_number])
   @@map("users")
 }
 
-model UserDetails {
-  id       String @id @default(uuid())
-  userId   String @unique @map("user_id")
-  full_name String @map("full_name")
-  
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  @@map("user_details")
+  @@map("refresh_tokens")
 }
