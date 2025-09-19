@@ -10,6 +10,8 @@ Complete testing documentation for the Ultra Minimal High-Performance NestJS API
 npm run test /health
 npm run test /profile
 npm run test /api/users
+npm run test /auth/register
+npm run test /auth/login
 
 # With custom parameters
 VUS=50 DURATION=15s npm run test /health

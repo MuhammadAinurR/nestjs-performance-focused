@@ -133,3 +133,4 @@ k6-results.json
 # Temporary files
 *.tmp
 *.temp
+/src/generated/prisma

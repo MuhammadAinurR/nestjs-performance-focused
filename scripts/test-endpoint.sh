@@ -9,20 +9,28 @@ DURATION=${DURATION:-10s}
 # Smart URL detection for different scenarios
 if [ -n "$BASE_URL" ]; then
     # User explicitly set BASE_URL
-    TARGET_URL="${BASE_URL}${ENDPOINT}"
+    TARGET_URL="${BASE_URL}"
     CHECK_URL="${BASE_URL}${ENDPOINT}"
 elif curl -s --max-time 2 "http://localhost:3000${ENDPOINT}" > /dev/null 2>&1; then
     # API is running on localhost, use localhost for checking but host.docker.internal for k6
-    TARGET_URL="http://host.docker.internal:3000${ENDPOINT}"
+    TARGET_URL="http://host.docker.internal:3000"
     CHECK_URL="http://localhost:3000${ENDPOINT}"
 else
     # Fallback to host.docker.internal for both
-    TARGET_URL="http://host.docker.internal:3000${ENDPOINT}"
+    TARGET_URL="http://host.docker.internal:3000"
     CHECK_URL="http://host.docker.internal:3000${ENDPOINT}"
 fi
 
+# Determine which k6 script to use
+if [[ "$ENDPOINT" == "/health" ]]; then
+    K6_SCRIPT="k6-health-test.js"
+else
+    K6_SCRIPT="k6-auth-test.js"
+fi
+
 echo "🔥 Testing endpoint: ${ENDPOINT}"
-echo "📍 Target URL: ${TARGET_URL}"
+echo "📍 Target URL: ${TARGET_URL}${ENDPOINT}"
+echo "🎯 K6 Script: ${K6_SCRIPT}"
 echo "👥 Virtual Users: ${VUS}"
 echo "⏱️  Duration: ${DURATION}"
 echo "================================================"
@@ -50,10 +58,11 @@ temp_output=$(mktemp)
 # Run k6 test with real-time output (no timeout on macOS)
 if docker run --rm \
   -e TARGET_URL="${TARGET_URL}" \
+  -e ENDPOINT="${ENDPOINT}" \
   -e VUS="${VUS}" \
   -e DURATION="${DURATION}" \
   -v "$PWD":/scripts \
-  grafana/k6 run /scripts/k6-health-test.js 2>&1 | tee "$temp_output"; then
+  grafana/k6 run "/scripts/${K6_SCRIPT}" 2>&1 | tee "$temp_output"; then
   
   echo ""
   echo "📊 EXTRACTING METRICS..."
@@ -76,7 +85,7 @@ if docker run --rm \
   echo "🔸 Error rate: ${error_rate:-N/A}"
   echo "🔸 Virtual users: ${VUS}"
   echo "🔸 Duration: ${DURATION}"
-  echo "🔸 Target: ${TARGET_URL}"
+  echo "🔸 Target: ${TARGET_URL}${ENDPOINT}"
   
 else
   echo ""

@@ -17,8 +17,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitAny": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": false,
+  "experimentalDecorators": true,
+  "emitDecoratorMetadata": true,
     "useDefineForClassFields": false
   },
   "include": ["src/**/*"],
