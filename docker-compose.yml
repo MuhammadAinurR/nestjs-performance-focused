@@ -1,9 +1,41 @@
-version: '3.8'
-
 services:
+  # Application service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mdc_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: "postgresql://mpix_user:mpix_password@postgres:5432/mpix_db?schema=public"
+      JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-key-change-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-super-secret-refresh-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "http.get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - mdc_network
+
+  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: mpix_postgres
+    container_name: mdc_postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: mpix_db
@@ -13,16 +45,18 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mpix_user -d mpix_db"]
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - mdc_network
 
+  # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: mpix_redis
+    container_name: mdc_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -34,6 +68,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - mdc_network
 
 volumes:
   postgres_data:
@@ -42,5 +78,5 @@ volumes:
     driver: local
 
 networks:
-  default:
-    name: mpix_network
+  mdc_network:
+    driver: bridge

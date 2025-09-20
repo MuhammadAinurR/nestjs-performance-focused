@@ -5,9 +5,11 @@
 
 # Variables
 DOCKER_COMPOSE = docker-compose
+DOCKER_COMPOSE_DEV = docker-compose -f docker-compose.dev.yml
 NPM = npm
-DB_CONTAINER = mpix_postgres
-REDIS_CONTAINER = mpix_redis
+DB_CONTAINER = mdc_postgres_dev
+REDIS_CONTAINER = mdc_redis_dev
+APP_CONTAINER = mdc_backend
 
 # Colors for output
 GREEN = \033[0;32m
@@ -15,7 +17,7 @@ YELLOW = \033[1;33m
 RED = \033[0;31m
 NC = \033[0m # No Color
 
-.PHONY: help install dev build start stop clean db-up db-down db-reset reroll migrate seed test lint format
+.PHONY: help install dev build start stop clean db-up db-down db-reset reroll migrate seed test lint format docker-up docker-down docker-build docker-logs
 
 help: ## Show this help message
 	@echo "$(GREEN)MPIX Backend Makefile$(NC)"
@@ -41,21 +43,41 @@ start: ## Start production server
 stop: ## Stop all services
 	@echo "$(YELLOW)Stopping all services...$(NC)"
 	$(DOCKER_COMPOSE) down
+	$(DOCKER_COMPOSE_DEV) down
 
 clean: stop ## Clean up containers and volumes
 	@echo "$(RED)Cleaning up containers and volumes...$(NC)"
 	$(DOCKER_COMPOSE) down -v --remove-orphans
+	$(DOCKER_COMPOSE_DEV) down -v --remove-orphans
 	docker system prune -f
 
-db-up: ## Start database and Redis containers
-	@echo "$(GREEN)Starting database and Redis containers...$(NC)"
-	$(DOCKER_COMPOSE) up -d postgres redis
+db-up: ## Start database and Redis containers (development)
+	@echo "$(GREEN)Starting development database and Redis containers...$(NC)"
+	$(DOCKER_COMPOSE_DEV) up -d postgres redis
 	@echo "$(GREEN)Waiting for database to be ready...$(NC)"
 	@sleep 5
 
-db-down: ## Stop database and Redis containers
-	@echo "$(YELLOW)Stopping database and Redis containers...$(NC)"
+db-down: ## Stop database and Redis containers (development)
+	@echo "$(YELLOW)Stopping development database and Redis containers...$(NC)"
+	$(DOCKER_COMPOSE_DEV) down
+
+docker-up: ## Start all services with Docker (production)
+	@echo "$(GREEN)Starting all services with Docker...$(NC)"
+	$(DOCKER_COMPOSE) up -d
+	@echo "$(GREEN)Waiting for services to be ready...$(NC)"
+	@sleep 10
+
+docker-down: ## Stop all Docker services
+	@echo "$(YELLOW)Stopping all Docker services...$(NC)"
 	$(DOCKER_COMPOSE) down
+
+docker-build: ## Build Docker images
+	@echo "$(GREEN)Building Docker images...$(NC)"
+	$(DOCKER_COMPOSE) build
+
+docker-logs: ## Show all Docker service logs
+	@echo "$(GREEN)Showing Docker service logs...$(NC)"
+	$(DOCKER_COMPOSE) logs -f
 
 db-reset: ## Reset database (delete, create, migrate)
 	@echo "$(RED)Resetting database...$(NC)"
@@ -105,16 +127,18 @@ format: ## Format code
 
 logs: ## Show application logs
 	@echo "$(GREEN)Showing logs...$(NC)"
-	$(DOCKER_COMPOSE) logs -f
+	$(DOCKER_COMPOSE_DEV) logs -f
 
 db-logs: ## Show database logs
 	@echo "$(GREEN)Showing database logs...$(NC)"
-	$(DOCKER_COMPOSE) logs -f postgres
+	$(DOCKER_COMPOSE_DEV) logs -f postgres
 
 redis-logs: ## Show Redis logs
 	@echo "$(GREEN)Showing Redis logs...$(NC)"
-	$(DOCKER_COMPOSE) logs -f redis
+	$(DOCKER_COMPOSE_DEV) logs -f redis
 
 status: ## Show service status
-	@echo "$(GREEN)Service Status:$(NC)"
+	@echo "$(GREEN)Development Service Status:$(NC)"
+	$(DOCKER_COMPOSE_DEV) ps
+	@echo "$(GREEN)Production Service Status:$(NC)"
 	$(DOCKER_COMPOSE) ps
