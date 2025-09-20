@@ -719,25 +719,282 @@ config/
 
 ## 🧪 Testing
 
-### Test Setup
-```bash
-# Run all tests
-make test
+This project includes a comprehensive testing suite using **Jest** and **Supertest** for thorough authentication endpoint testing.
 
-# Run tests in watch mode  
-npm run test:watch
+### 🏗️ Test Architecture
 
-# Run with coverage report
-npm run test:cov
-
-# Run end-to-end tests
-make test-e2e
+```
+test/
+├── auth/                    # Authentication endpoint tests
+│   └── auth.e2e-spec.ts    # Complete auth flow testing
+├── utils/                   # Testing utilities
+│   ├── test-helper.ts      # Test app setup & database helpers
+│   └── mock-data.ts        # Test data fixtures & expectations
+└── jest-e2e.json          # Jest E2E configuration
 ```
 
-### Test Structure
-- **Unit Tests**: Service and controller testing
-- **Integration Tests**: Database and API endpoint testing
-- **E2E Tests**: Full application workflow testing
+### 🚀 Quick Start Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run E2E tests specifically
+npm run test:e2e
+
+# Run auth endpoint tests only
+npm run test:auth
+
+# Run tests in watch mode
+npm run test:e2e:watch
+
+# Run with coverage report
+npm run test:e2e:cov:manual
+```
+
+### 📋 Test Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `npm test` | Run unit tests |
+| `npm run test:watch` | Watch mode for unit tests |
+| `npm run test:cov` | Unit tests with coverage |
+| `npm run test:e2e` | End-to-end tests |
+| `npm run test:e2e:watch` | E2E tests in watch mode |
+| `npm run test:e2e:cov` | E2E tests with coverage |
+| `npm run test:auth` | Authentication tests only |
+
+### 🧪 **Unit Tests vs E2E Tests**
+
+#### **Unit Tests (`npm test`)**
+- **Purpose**: Test individual functions, classes, and services in isolation
+- **Location**: `src/` directory alongside source files (e.g., `auth.service.spec.ts`)
+- **Speed**: Fast execution (seconds)
+- **Dependencies**: Mock external dependencies
+- **Coverage**: Service logic, business rules, error handling
+
+#### **E2E Tests (`npm run test:e2e`)**
+- **Purpose**: Test complete workflows and API endpoints
+- **Location**: `test/` directory
+- **Speed**: Slower execution (minutes)
+- **Dependencies**: Real database and HTTP server
+- **Coverage**: Complete user journeys, API contracts, integration
+
+**Current Test Status:**
+- ✅ **Unit Tests**: 15 tests for auth and health services  
+- ✅ **E2E Tests**: 23 comprehensive authentication workflow tests
+
+### 📊 Test Coverage
+
+The project uses **c8** for coverage reporting (compatible with Node.js v24+):
+
+```bash
+# Unit test coverage
+npm run test:cov
+
+# E2E test coverage  
+npm run test:e2e:cov
+
+# Coverage reports generated in:
+# - Terminal output (text)
+# - coverage/lcov-report/index.html (HTML)
+# - coverage/lcov.info (LCOV format)
+```
+
+**Current Coverage Results:**
+
+**Unit Tests (Services Only):**
+```
+File                         | % Stmts | % Branch | % Funcs | % Lines
+-----------------------------|---------|----------|---------|--------
+src/auth/auth.service.ts     |   70.56 |       75 |   85.71 |   70.56
+src/health/health.service.ts |   94.91 |    55.55 |     100 |   94.91
+```
+
+**E2E Tests (Complete Integration):**
+```
+File                         | % Stmts | % Branch | % Funcs | % Lines
+-----------------------------|---------|----------|---------|--------
+All files                    |   75.55 |    64.44 |   91.17 |   75.55
+src/auth                     |   94.97 |    73.33 |     100 |   94.97
+src/auth/auth.controller.ts  |   93.97 |    88.23 |     100 |   93.97
+src/auth/auth.service.ts     |    96.1 |    72.72 |     100 |    96.1
+```
+
+> **Note**: The project uses c8 for coverage reporting, which is compatible with Node.js v24+.
+
+### 🔐 Authentication Endpoint Tests
+
+The test suite covers all authentication endpoints with comprehensive scenarios:
+
+#### 🔑 `/auth/register` (POST)
+- ✅ **Valid Registration**: New user creation with proper validation
+- ❌ **Duplicate Email**: Prevents registration with existing email
+- ❌ **Missing Fields**: Validates required field presence
+- ❌ **Invalid Email**: Email format validation
+- ❌ **Weak Password**: Password strength requirements
+
+#### 🔓 `/auth/login` (POST)
+- ✅ **Valid Login**: Successful authentication with valid credentials
+- ❌ **Invalid Email**: Rejects non-existent email addresses
+- ❌ **Invalid Password**: Rejects incorrect passwords
+- ❌ **Missing Fields**: Validates required login fields
+- ❌ **Empty Request**: Handles empty request bodies
+
+#### 🔄 `/auth/refresh` (POST)
+- ✅ **Valid Refresh**: Token refresh with valid refresh token
+- ❌ **Invalid Token**: Rejects invalid refresh tokens
+- ❌ **Malformed Token**: Handles malformed token formats
+- ❌ **Missing Token**: Validates refresh token presence
+
+#### 👤 `/auth/me` (GET)
+- ✅ **Valid Token**: Returns user profile with valid JWT
+- ❌ **No Token**: Rejects requests without authorization
+- ❌ **Invalid Token**: Rejects invalid JWT tokens
+- ❌ **Malformed Header**: Handles malformed authorization headers
+
+#### 🚪 `/auth/logout` (POST)
+- ✅ **Valid Logout**: Successful logout with valid token
+- ❌ **No Token**: Rejects logout without authorization
+- ❌ **Invalid Token**: Rejects logout with invalid tokens
+- ❌ **Used Token**: Handles tokens after refresh/logout
+
+### 🔄 Integration Flow Testing
+
+The test suite includes complete authentication workflow testing:
+
+```typescript
+// Complete Authentication Flow Test
+1. Register new user       → 201 Created
+2. Login with credentials  → 200 OK + tokens
+3. Get user profile       → 200 OK + user data
+4. Refresh access token   → 200 OK + new tokens
+5. Use new token          → 200 OK + user data
+6. Logout                 → 200 OK
+7. Verify token invalid   → 401 Unauthorized
+```
+
+### 🛠️ Test Utilities
+
+#### TestHelper Class
+```typescript
+// Test application setup and cleanup
+TestHelper.setupTestApp()     // Initialize test app
+TestHelper.clearDatabase()    // Clean test database
+TestHelper.createTestUser()   // Create test user
+TestHelper.loginTestUser()    // Authenticate test user
+```
+
+#### Mock Data
+```typescript
+// Comprehensive test data fixtures
+mockUsers.validUser           // Valid user registration data
+mockUsers.invalidUser*        // Various invalid user scenarios
+mockLoginCredentials.*        // Login test scenarios
+mockTokens.*                 // Token testing scenarios
+expectedResponseFormat.*      // Response validation schemas
+```
+
+### 🎯 Test Data Validation
+
+Tests validate complete response structures:
+
+```typescript
+// Expected Response Format
+{
+  rc: 'SUCCESS',
+  message: 'Operation completed successfully',
+  payload: {
+    data: {
+      id: expect.any(Number),
+      email: expect.any(String),
+      full_name: expect.any(String),
+      phone_number: expect.any(String),
+      created_at: expect.any(String),
+      updated_at: expect.any(String)
+      // password field excluded from responses
+    }
+  }
+}
+```
+
+### 🔧 Test Configuration
+
+The project uses Jest with TypeScript support:
+
+```json
+// test/jest-e2e.json
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapping": {
+    "^src/(.*)$": "<rootDir>/../src/$1"
+  }
+}
+```
+
+### 🚀 Running Tests in Development
+
+```bash
+# Start database for testing
+npm run db:up
+
+# Run tests in watch mode for active development
+npm run test:e2e:watch
+
+# Run specific test file
+npm run test:e2e -- auth.e2e-spec.ts
+
+# Run tests with verbose output
+npm run test:e2e -- --verbose
+
+# Stop database after testing
+npm run db:down
+```
+
+### 📊 Test Coverage
+
+Generate comprehensive coverage reports:
+
+```bash
+# Generate coverage for E2E tests
+npm run test:e2e:cov:manual
+
+# View coverage report
+open coverage/lcov-report/index.html  # macOS
+start coverage/lcov-report/index.html # Windows
+```
+
+### 🐛 Test Debugging
+
+Debug failing tests:
+
+```bash
+# Run tests with debugging
+npm run test:debug
+
+# Run specific test with detailed output
+npm run test:e2e -- --verbose --no-cache
+
+# Check test environment
+NODE_ENV=test npm run test:e2e
+```
+
+### ✅ Best Practices
+
+1. **Database Isolation**: Each test cleans database before/after execution
+2. **Mock Data**: Comprehensive fixtures for all test scenarios  
+3. **Response Validation**: Complete response structure validation
+4. **Integration Testing**: Full workflow testing from registration to logout
+5. **Error Scenarios**: Extensive negative testing for edge cases
+6. **Token Management**: Proper JWT lifecycle testing
+
+The testing suite ensures reliable authentication functionality and provides confidence for production deployment.
 
 ## 🔄 Development Workflow
 
