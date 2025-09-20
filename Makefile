@@ -26,7 +26,7 @@ else
     NC = \033[0m
 endif
 
-.PHONY: help install dev build start stop clean db-up db-down db-reset reroll migrate seed test lint format docker-up docker-down docker-build docker-logs
+.PHONY: help install dev build start stop clean db-up db-down db-reset reroll migrate seed test lint format docker-up docker-up-dev docker-down docker-build docker-logs
 
 help: ## Show this help message
 ifeq ($(OS),Windows_NT)
@@ -51,7 +51,8 @@ ifeq ($(OS),Windows_NT)
 	@echo "  db-reset        - Reset database (delete, create, migrate)"
 	@echo.
 	@echo "Docker Commands:"
-	@echo "  docker-up       - Start all services with Docker (production)"
+	@echo "  docker-up       - Start all services with Docker and setup database (production)"
+	@echo "  docker-up-dev   - Start database and Redis containers with full setup (development)"
 	@echo "  docker-down     - Stop all Docker services"
 	@echo "  docker-build    - Build Docker images"
 	@echo "  docker-logs     - Show all Docker service logs"
@@ -85,7 +86,8 @@ else
 	@echo "  $(YELLOW)db-reset       $(NC) Reset database (delete, create, migrate)"
 	@echo ""
 	@echo "  $(GREEN)Docker Commands:$(NC)"
-	@echo "  $(YELLOW)docker-up      $(NC) Start all services with Docker (production)"
+	@echo "  $(YELLOW)docker-up      $(NC) Start all services with Docker and setup database (production)"
+	@echo "  $(YELLOW)docker-up-dev  $(NC) Start database and Redis containers with full setup (development)"
 	@echo "  $(YELLOW)docker-down    $(NC) Stop all Docker services"
 	@echo "  $(YELLOW)docker-build   $(NC) Build Docker images"
 	@echo "  $(YELLOW)docker-logs    $(NC) Show all Docker service logs"
@@ -132,6 +134,8 @@ db-up: ## Start database and Redis containers (development)
 	@echo "Waiting for database to be ready..."
 	@timeout /t 5 >nul 2>&1 || sleep 5 2>/dev/null || echo "Waiting 5 seconds..."
 
+docker-up-dev: db-up reroll ## Start database and Redis containers with full setup (development)
+
 db-down: ## Stop database and Redis containers (development)
 	@echo "Stopping development database and Redis containers..."
 	$(DOCKER_COMPOSE_DEV) down
@@ -141,6 +145,8 @@ docker-up: ## Start all services with Docker (production)
 	$(DOCKER_COMPOSE) up -d
 	@echo "Waiting for services to be ready..."
 	@timeout /t 10 >nul 2>&1 || sleep 10 2>/dev/null || echo "Waiting 10 seconds..."
+	@echo "Setting up database..."
+	$(MAKE) reroll
 
 docker-down: ## Stop all Docker services
 	@echo "Stopping all Docker services..."

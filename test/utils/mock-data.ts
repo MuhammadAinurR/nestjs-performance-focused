@@ -113,16 +113,18 @@ export const expectedResponseFormat = {
     message: expect.any(String),
     timestamp: expect.any(String),
     payload: {
-      user: {
-        id: expect.any(String),
-        email: expect.any(String),
-        full_name: expect.any(String),
-        phone_number: expect.any(String),
-        created_at: expect.any(String),
-      },
-      tokens: {
-        access_token: expect.any(String),
-        refresh_token: expect.any(String),
+      data: {
+        user: {
+          id: expect.any(String),
+          email: expect.any(String),
+          full_name: expect.any(String),
+          phone_number: expect.any(String),
+          created_at: expect.any(String),
+        },
+        tokens: {
+          access_token: expect.any(String),
+          refresh_token: expect.any(String),
+        },
       },
     },
   },
@@ -133,17 +135,19 @@ export const expectedResponseFormat = {
     message: expect.any(String),
     timestamp: expect.any(String),
     payload: {
-      user: {
-        id: expect.any(String),
-        email: expect.any(String),
-        full_name: expect.any(String),
-        phone_number: expect.any(String),
-        created_at: expect.any(String),
-        updated_at: expect.any(String),
-      },
-      tokens: {
-        access_token: expect.any(String),
-        refresh_token: expect.any(String),
+      data: {
+        user: {
+          id: expect.any(String),
+          email: expect.any(String),
+          full_name: expect.any(String),
+          phone_number: expect.any(String),
+          created_at: expect.any(String),
+          updated_at: expect.any(String),
+        },
+        tokens: {
+          access_token: expect.any(String),
+          refresh_token: expect.any(String),
+        },
       },
     },
   },
@@ -154,13 +158,15 @@ export const expectedResponseFormat = {
     message: expect.any(String),
     timestamp: expect.any(String),
     payload: {
-      user: {
-        id: expect.any(String),
-        email: expect.any(String),
-        full_name: expect.any(String),
-        phone_number: expect.any(String),
-        created_at: expect.any(String),
-        updated_at: expect.any(String),
+      data: {
+        user: {
+          id: expect.any(String),
+          email: expect.any(String),
+          full_name: expect.any(String),
+          phone_number: expect.any(String),
+          created_at: expect.any(String),
+          updated_at: expect.any(String),
+        },
       },
     },
   },

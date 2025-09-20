@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ResponseService } from '../common/services/response.service';
 import * as bcrypt from 'bcryptjs';
 
 describe('AuthService', () => {
@@ -36,6 +37,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        ResponseService,
         {
           provide: PrismaService,
           useValue: mockPrismaService,
@@ -101,14 +103,14 @@ describe('AuthService', () => {
 
       const result = await service.register(registerDto);
 
-      expect(result.payload.user).toEqual({
+      expect(result.payload.data.user).toEqual({
         id: createdUser.id,
         email: createdUser.email,
         full_name: createdUser.fullName,
         phone_number: createdUser.phoneNumber,
         created_at: createdUser.createdAt,
       });
-      expect(result.payload.tokens).toEqual({
+      expect(result.payload.data.tokens).toEqual({
         access_token: 'access_token',
         refresh_token: 'refresh_token',
       });
@@ -170,11 +172,11 @@ describe('AuthService', () => {
 
       const result = await service.login(loginDto);
 
-      expect(result.payload.tokens).toEqual({
+      expect(result.payload.data.tokens).toEqual({
         access_token: 'access_token',
         refresh_token: 'refresh_token',
       });
-      expect(result.payload.user.email).toBe(loginDto.email);
+      expect(result.payload.data.user.email).toBe(loginDto.email);
     });
 
     it('should throw UnauthorizedException with invalid credentials', async () => {
@@ -214,7 +216,7 @@ describe('AuthService', () => {
 
       const result = await service.getProfile('1');
 
-      expect(result.payload.user).toEqual({
+      expect(result.payload.data.user).toEqual({
         id: user.id,
         email: user.email,
         full_name: user.fullName,

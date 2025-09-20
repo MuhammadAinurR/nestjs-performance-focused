@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { FastifyRequest, FastifyReply } from 'fastify';
+import { ErrorResponse } from '../interfaces/response.interface';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -19,6 +20,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
+    let errorCode = 'INTERNAL_ERROR';
+    let details: any = null;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -27,8 +30,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-        message = (exceptionResponse as any).message || 'An error occurred';
+        const responseObj = exceptionResponse as any;
+        message = responseObj.message || responseObj.error || message;
+        details = responseObj.details || responseObj;
+        errorCode = this.getErrorCode(status);
       }
+    } else if (exception instanceof Error) {
+      message = exception.message;
+      details = { stack: exception.stack };
     }
 
     // Log error details
@@ -38,14 +47,46 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       `${request.method} ${request.url}`,
     );
 
-    // Send error response
-    response.status(status).send({
+    const errorResponse: ErrorResponse = {
       rc: 'ERROR',
       message,
       timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      statusCode: status,
-    });
+      payload: {
+        error: {
+          code: errorCode,
+          details: {
+            statusCode: status,
+            path: request.url,
+            method: request.method,
+            ...(details && { details })
+          }
+        }
+      }
+    };
+
+    // Send error response
+    response.status(status).send(errorResponse);
+  }
+
+  private getErrorCode(status: number): string {
+    switch (status) {
+      case HttpStatus.BAD_REQUEST:
+        return 'BAD_REQUEST';
+      case HttpStatus.UNAUTHORIZED:
+        return 'UNAUTHORIZED';
+      case HttpStatus.FORBIDDEN:
+        return 'FORBIDDEN';
+      case HttpStatus.NOT_FOUND:
+        return 'NOT_FOUND';
+      case HttpStatus.CONFLICT:
+        return 'CONFLICT';
+      case HttpStatus.UNPROCESSABLE_ENTITY:
+        return 'VALIDATION_ERROR';
+      case HttpStatus.TOO_MANY_REQUESTS:
+        return 'RATE_LIMIT_EXCEEDED';
+      case HttpStatus.INTERNAL_SERVER_ERROR:
+      default:
+        return 'INTERNAL_ERROR';
+    }
   }
 }

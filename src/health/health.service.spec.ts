@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthService } from './health.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ResponseService } from '../common/services/response.service';
 
 describe('HealthService', () => {
   let service: HealthService;
@@ -15,6 +16,7 @@ describe('HealthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HealthService,
+        ResponseService,
         {
           provide: PrismaService,
           useValue: mockPrismaService,

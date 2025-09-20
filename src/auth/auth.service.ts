@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { ResponseService } from '../common/services/response.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 
 @Injectable()
@@ -11,7 +12,8 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+    private readonly responseService: ResponseService,
+  ) { }
 
   async register(registerDto: RegisterDto) {
     const { email, password, full_name, phone_number } = registerDto;
@@ -57,15 +59,10 @@ export class AuthService {
       created_at: user.createdAt,
     };
 
-    return {
-      rc: 'SUCCESS',
-      message: 'User registered successfully',
-      timestamp: new Date().toISOString(),
-      payload: {
-        user: responseUser,
-        tokens,
-      },
-    };
+    return this.responseService.authSuccess({
+      user: responseUser,
+      tokens,
+    }, 'register');
   }
 
   async login(loginDto: LoginDto) {
@@ -94,15 +91,10 @@ export class AuthService {
       updated_at: userWithoutPassword.updatedAt,
     };
 
-    return {
-      rc: 'SUCCESS',
-      message: 'Login successful',
-      timestamp: new Date().toISOString(),
-      payload: {
-        user: responseUser,
-        tokens,
-      },
-    };
+    return this.responseService.authSuccess({
+      user: responseUser,
+      tokens,
+    }, 'login');
   }
 
   async refreshToken(refreshToken: string) {
@@ -142,15 +134,10 @@ export class AuthService {
         updated_at: user.updatedAt,
       };
 
-      return {
-        rc: 'SUCCESS',
-        message: 'Token refreshed successfully',
-        timestamp: new Date().toISOString(),
-        payload: {
-          user: responseUser,
-          tokens,
-        },
-      };
+      return this.responseService.authSuccess({
+        user: responseUser,
+        tokens,
+      }, 'refresh');
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -183,14 +170,9 @@ export class AuthService {
       updated_at: user.updatedAt,
     };
 
-    return {
-      rc: 'SUCCESS',
-      message: 'Profile retrieved successfully',
-      timestamp: new Date().toISOString(),
-      payload: {
-        user: responseUser,
-      },
-    };
+    return this.responseService.authSuccess({
+      user: responseUser,
+    }, 'profile');
   }
 
   async logout(accessToken: string) {
@@ -199,14 +181,9 @@ export class AuthService {
     // 2. Set expiration time equal to the token's remaining TTL
     // For now, we'll just return a success response
 
-    return {
-      rc: 'SUCCESS',
-      message: 'Logout successful',
-      timestamp: new Date().toISOString(),
-      payload: {
-        message: 'Token invalidated successfully',
-      },
-    };
+    return this.responseService.authSuccess({
+      message: 'Token invalidated successfully',
+    }, 'logout');
   }
 
   private async generateTokens(userId: string, email: string) {

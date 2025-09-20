@@ -68,12 +68,12 @@ describe('Authentication (e2e)', () => {
         .expect(201);
 
       expect(response.body).toMatchObject(expectedResponseFormat.registerResponse);
-      expect(response.body.payload.user.email).toBe(mockUsers.validUser.email);
-      expect(response.body.payload.user.full_name).toBe(mockUsers.validUser.full_name);
-      expect(response.body.payload.user.phone_number).toBe(mockUsers.validUser.phone_number);
-      expect(response.body.payload.user.password).toBeUndefined(); // Password should not be returned
-      expect(response.body.payload.tokens.access_token).toBeDefined();
-      expect(response.body.payload.tokens.refresh_token).toBeDefined();
+      expect(response.body.payload.data.user.email).toBe(mockUsers.validUser.email);
+      expect(response.body.payload.data.user.full_name).toBe(mockUsers.validUser.full_name);
+      expect(response.body.payload.data.user.phone_number).toBe(mockUsers.validUser.phone_number);
+      expect(response.body.payload.data.user.password).toBeUndefined(); // Password should not be returned
+      expect(response.body.payload.data.tokens.access_token).toBeDefined();
+      expect(response.body.payload.data.tokens.refresh_token).toBeDefined();
     });
 
     it('should not register user with duplicate email', async () => {
@@ -136,14 +136,14 @@ describe('Authentication (e2e)', () => {
         .expect(201); // NestJS POST endpoints return 201 by default
 
       expect(response.body).toMatchObject(expectedResponseFormat.loginResponse);
-      expect(response.body.payload.tokens.access_token).toBeDefined();
-      expect(response.body.payload.tokens.refresh_token).toBeDefined();
-      expect(response.body.payload.user.email).toBe(mockLoginCredentials.validLogin.email);
+      expect(response.body.payload.data.tokens.access_token).toBeDefined();
+      expect(response.body.payload.data.tokens.refresh_token).toBeDefined();
+      expect(response.body.payload.data.user.email).toBe(mockLoginCredentials.validLogin.email);
 
       // Store tokens for other tests
       authTokens = {
-        accessToken: response.body.payload.tokens.access_token,
-        refreshToken: response.body.payload.tokens.refresh_token,
+        accessToken: response.body.payload.data.tokens.access_token,
+        refreshToken: response.body.payload.data.tokens.refresh_token,
       };
     });
 
@@ -198,8 +198,8 @@ describe('Authentication (e2e)', () => {
         .expect(201);
 
       authTokens = {
-        accessToken: loginResponse.body.payload.tokens.access_token,
-        refreshToken: loginResponse.body.payload.tokens.refresh_token,
+        accessToken: loginResponse.body.payload.data.tokens.access_token,
+        refreshToken: loginResponse.body.payload.data.tokens.refresh_token,
       };
     });
 
@@ -210,10 +210,10 @@ describe('Authentication (e2e)', () => {
         .expect(201);
 
       expect(response.body).toMatchObject(expectedResponseFormat.success);
-      expect(response.body.payload.tokens.access_token).toBeDefined();
-      expect(response.body.payload.tokens.refresh_token).toBeDefined();
+      expect(response.body.payload.data.tokens.access_token).toBeDefined();
+      expect(response.body.payload.data.tokens.refresh_token).toBeDefined();
       // Note: Some APIs may return the same token if still valid
-      // expect(response.body.payload.tokens.access_token).not.toBe(authTokens.accessToken);
+      // expect(response.body.payload.data.tokens.access_token).not.toBe(authTokens.accessToken);
     });
 
     it('should reject invalid refresh token', async () => {
@@ -259,8 +259,8 @@ describe('Authentication (e2e)', () => {
         .expect(201);
 
       authTokens = {
-        accessToken: loginResponse.body.payload.tokens.access_token,
-        refreshToken: loginResponse.body.payload.tokens.refresh_token,
+        accessToken: loginResponse.body.payload.data.tokens.access_token,
+        refreshToken: loginResponse.body.payload.data.tokens.refresh_token,
       };
     });
 
@@ -271,8 +271,8 @@ describe('Authentication (e2e)', () => {
         .expect(200);
 
       expect(response.body).toMatchObject(expectedResponseFormat.profileResponse);
-      expect(response.body.payload.user.email).toBe(mockUsers.validUser.email);
-      expect(response.body.payload.user.password).toBeUndefined();
+      expect(response.body.payload.data.user.email).toBe(mockUsers.validUser.email);
+      expect(response.body.payload.data.user.password).toBeUndefined();
     });
 
     it('should reject request without token', async () => {
@@ -317,8 +317,8 @@ describe('Authentication (e2e)', () => {
         .expect(201);
 
       authTokens = {
-        accessToken: loginResponse.body.payload.tokens.access_token,
-        refreshToken: loginResponse.body.payload.tokens.refresh_token,
+        accessToken: loginResponse.body.payload.data.tokens.access_token,
+        refreshToken: loginResponse.body.payload.data.tokens.refresh_token,
       };
     });
 
@@ -374,7 +374,7 @@ describe('Authentication (e2e)', () => {
         .send(mockUsers.validUser)
         .expect(201);
 
-      expect(registerResponse.body.payload.user.email).toBe(mockUsers.validUser.email);
+      expect(registerResponse.body.payload.data.user.email).toBe(mockUsers.validUser.email);
 
       // 2. Login
       const loginResponse = await request(app.getHttpServer())
@@ -382,7 +382,7 @@ describe('Authentication (e2e)', () => {
         .send(mockLoginCredentials.validLogin)
         .expect(201);
 
-      const { access_token, refresh_token } = loginResponse.body.payload.tokens;
+      const { access_token, refresh_token } = loginResponse.body.payload.data.tokens;
 
       // 3. Get user profile
       const profileResponse = await request(app.getHttpServer())
@@ -390,7 +390,7 @@ describe('Authentication (e2e)', () => {
         .set('Authorization', `Bearer ${access_token}`)
         .expect(200);
 
-      expect(profileResponse.body.payload.user.email).toBe(mockUsers.validUser.email);
+      expect(profileResponse.body.payload.data.user.email).toBe(mockUsers.validUser.email);
 
       // 4. Refresh token
       const refreshResponse = await request(app.getHttpServer())
@@ -398,7 +398,7 @@ describe('Authentication (e2e)', () => {
         .send({ refresh_token })
         .expect(201);
 
-      const newAccessToken = refreshResponse.body.payload.tokens.access_token;
+      const newAccessToken = refreshResponse.body.payload.data.tokens.access_token;
 
       // 5. Use new token to get profile
       const newProfileResponse = await request(app.getHttpServer())
@@ -406,7 +406,7 @@ describe('Authentication (e2e)', () => {
         .set('Authorization', `Bearer ${newAccessToken}`)
         .expect(200);
 
-      expect(newProfileResponse.body.payload.user.email).toBe(mockUsers.validUser.email);
+      expect(newProfileResponse.body.payload.data.user.email).toBe(mockUsers.validUser.email);
 
       // 6. Logout
       await request(app.getHttpServer())
