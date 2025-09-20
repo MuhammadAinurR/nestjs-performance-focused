@@ -6,7 +6,7 @@ export class HealthService {
   private readonly startTime = Date.now();
   private readonly appStartTime = process.hrtime();
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async getHealthCheck() {
     const timestamp = new Date().toISOString();
@@ -25,9 +25,9 @@ export class HealthService {
           version: process.env.APP_VERSION || '0.1.0',
           ts: now,
           uptime,
-          started: startedSeconds
-        }
-      }
+          started: startedSeconds,
+        },
+      },
     };
   }
 

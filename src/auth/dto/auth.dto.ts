@@ -63,9 +63,9 @@ export class ProfileResponseDto {
         full_name: 'John Doe',
         phone_number: '+1234567890',
         created_at: '2025-09-19T15:30:35.721Z',
-        updated_at: '2025-09-19T15:30:35.721Z'
-      }
-    }
+        updated_at: '2025-09-19T15:30:35.721Z',
+      },
+    },
   })
   payload: {
     user: {
@@ -91,8 +91,8 @@ export class LogoutResponseDto {
 
   @ApiProperty({
     example: {
-      message: 'Token invalidated successfully'
-    }
+      message: 'Token invalidated successfully',
+    },
   })
   payload: {
     message: string;
@@ -117,13 +117,13 @@ export class AuthResponseDto {
         full_name: 'John Doe',
         phone_number: '+1234567890',
         created_at: '2025-09-19T15:30:35.721Z',
-        updated_at: '2025-09-19T15:30:35.721Z'
+        updated_at: '2025-09-19T15:30:35.721Z',
       },
       tokens: {
         access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-      }
-    }
+        refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+    },
   })
   payload: {
     user: {

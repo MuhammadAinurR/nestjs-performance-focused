@@ -20,9 +20,9 @@ export class HealthCheckResponseDto extends BaseResponseDto {
       data: {
         rc: 'ERROR',
         reason: 'HealthService undefined',
-        hint: 'Check ESM import order / reflect-metadata'
-      }
-    }
+        hint: 'Check ESM import order / reflect-metadata',
+      },
+    },
   })
   payload: {
     data: {
@@ -40,15 +40,15 @@ export class DatabaseHealthResponseDto extends BaseResponseDto {
         database: {
           status: 'healthy',
           connected: true,
-          timestamp: '2025-09-19T15:32:25.217Z'
+          timestamp: '2025-09-19T15:32:25.217Z',
         },
         application: {
           status: 'ok',
           version: '0.1.0',
-          uptime: 3.8815779
-        }
-      }
-    }
+          uptime: 3.8815779,
+        },
+      },
+    },
   })
   payload: {
     data: {

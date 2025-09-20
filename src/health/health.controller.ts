@@ -6,14 +6,14 @@ import { HealthCheckResponseDto, DatabaseHealthResponseDto } from './dto/health.
 @ApiTags('Health')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly healthService: HealthService) { }
+  constructor(private readonly healthService: HealthService) {}
 
   @Get()
   @ApiOperation({ summary: 'Basic health check' })
   @ApiResponse({
     status: 200,
     description: 'Health check response',
-    type: HealthCheckResponseDto
+    type: HealthCheckResponseDto,
   })
   async getHealth() {
     return this.healthService.getHealthCheck();
@@ -24,7 +24,7 @@ export class HealthController {
   @ApiResponse({
     status: 200,
     description: 'Database health check response',
-    type: DatabaseHealthResponseDto
+    type: DatabaseHealthResponseDto,
   })
   async getDatabaseHealth() {
     return this.healthService.getDatabaseHealth();
