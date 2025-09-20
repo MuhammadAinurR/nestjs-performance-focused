@@ -11,15 +11,59 @@ DB_CONTAINER = mdc_postgres_dev
 REDIS_CONTAINER = mdc_redis_dev
 APP_CONTAINER = mdc_backend
 
-# Colors for output
-GREEN = \033[0;32m
-YELLOW = \033[1;33m
-RED = \033[0;31m
-NC = \033[0m # No Color
+# Detect OS and set colors accordingly
+ifeq ($(OS),Windows_NT)
+    # Windows - no colors due to PowerShell compatibility issues
+    GREEN = 
+    YELLOW = 
+    RED = 
+    NC = 
+else
+    # Unix/Linux/macOS - use ANSI colors
+    GREEN = \033[0;32m
+    YELLOW = \033[1;33m
+    RED = \033[0;31m
+    NC = \033[0m
+endif
 
 .PHONY: help install dev build start stop clean db-up db-down db-reset reroll migrate seed test lint format docker-up docker-down docker-build docker-logs
 
 help: ## Show this help message
+ifeq ($(OS),Windows_NT)
+	@echo "MPIX Backend Makefile"
+	@echo "Available commands:"
+	@echo "  help            - Show this help message"
+	@echo "  install         - Install dependencies"
+	@echo "  dev             - Start development server with database"
+	@echo "  build           - Build the application"
+	@echo "  start           - Start production server"
+	@echo "  stop            - Stop all services"
+	@echo "  clean           - Clean up containers and volumes"
+	@echo.
+	@echo "Database Commands:"
+	@echo "  db-up           - Start database and Redis containers (development)"
+	@echo "  db-down         - Stop database and Redis containers (development)"
+	@echo "  reroll          - Complete database reset: delete, create, migrate, and seed"
+	@echo "  reroll-confirm  - Complete database reset with confirmation (Unix only)"
+	@echo "  setup           - Start services and setup database (complete development setup)"
+	@echo "  migrate         - Run database migrations"
+	@echo "  seed            - Seed database with test data"
+	@echo "  db-reset        - Reset database (delete, create, migrate)"
+	@echo.
+	@echo "Docker Commands:"
+	@echo "  docker-up       - Start all services with Docker (production)"
+	@echo "  docker-down     - Stop all Docker services"
+	@echo "  docker-build    - Build Docker images"
+	@echo "  docker-logs     - Show all Docker service logs"
+	@echo.
+	@echo "Development Commands:"
+	@echo "  test            - Run tests"
+	@echo "  test-e2e        - Run end-to-end tests"
+	@echo "  lint            - Run linting"
+	@echo "  format          - Format code"
+	@echo "  logs            - Show application logs"
+	@echo "  status          - Show service status"
+else
 	@echo "$(GREEN)MPIX Backend Makefile$(NC)"
 	@echo "Available commands:"
 	@echo "  $(YELLOW)help           $(NC) Show this help message"
@@ -53,141 +97,142 @@ help: ## Show this help message
 	@echo "  $(YELLOW)format         $(NC) Format code"
 	@echo "  $(YELLOW)logs           $(NC) Show application logs"
 	@echo "  $(YELLOW)status         $(NC) Show service status"
+endif
 
 install: ## Install dependencies
-	@echo "$(GREEN)Installing dependencies...$(NC)"
+	@echo "Installing dependencies..."
 	$(NPM) install
 
 dev: db-up ## Start development server with database
-	@echo "$(GREEN)Starting development server...$(NC)"
+	@echo "Starting development server..."
 	$(NPM) run start:dev
 
 build: ## Build the application
-	@echo "$(GREEN)Building application...$(NC)"
+	@echo "Building application..."
 	$(NPM) run build
 
 start: ## Start production server
-	@echo "$(GREEN)Starting production server...$(NC)"
+	@echo "Starting production server..."
 	$(NPM) run start:prod
 
 stop: ## Stop all services
-	@echo "$(YELLOW)Stopping all services...$(NC)"
+	@echo "Stopping all services..."
 	$(DOCKER_COMPOSE) down
 	$(DOCKER_COMPOSE_DEV) down
 
 clean: stop ## Clean up containers and volumes
-	@echo "$(RED)Cleaning up containers and volumes...$(NC)"
+	@echo "Cleaning up containers and volumes..."
 	$(DOCKER_COMPOSE) down -v --remove-orphans
 	$(DOCKER_COMPOSE_DEV) down -v --remove-orphans
 	docker system prune -f
 
 db-up: ## Start database and Redis containers (development)
-	@echo "$(GREEN)Starting development database and Redis containers...$(NC)"
+	@echo "Starting development database and Redis containers..."
 	$(DOCKER_COMPOSE_DEV) up -d postgres redis
-	@echo "$(GREEN)Waiting for database to be ready...$(NC)"
+	@echo "Waiting for database to be ready..."
 	@timeout /t 5 >nul 2>&1 || sleep 5 2>/dev/null || echo "Waiting 5 seconds..."
 
 db-down: ## Stop database and Redis containers (development)
-	@echo "$(YELLOW)Stopping development database and Redis containers...$(NC)"
+	@echo "Stopping development database and Redis containers..."
 	$(DOCKER_COMPOSE_DEV) down
 
 docker-up: ## Start all services with Docker (production)
-	@echo "$(GREEN)Starting all services with Docker...$(NC)"
+	@echo "Starting all services with Docker..."
 	$(DOCKER_COMPOSE) up -d
-	@echo "$(GREEN)Waiting for services to be ready...$(NC)"
+	@echo "Waiting for services to be ready..."
 	@timeout /t 10 >nul 2>&1 || sleep 10 2>/dev/null || echo "Waiting 10 seconds..."
 
 docker-down: ## Stop all Docker services
-	@echo "$(YELLOW)Stopping all Docker services...$(NC)"
+	@echo "Stopping all Docker services..."
 	$(DOCKER_COMPOSE) down
 
 docker-build: ## Build Docker images
-	@echo "$(GREEN)Building Docker images...$(NC)"
+	@echo "Building Docker images..."
 	$(DOCKER_COMPOSE) build
 
 docker-logs: ## Show all Docker service logs
-	@echo "$(GREEN)Showing Docker service logs...$(NC)"
+	@echo "Showing Docker service logs..."
 	$(DOCKER_COMPOSE) logs -f
 
 db-reset: ## Reset database (delete, create, migrate)
-	@echo "$(RED)Resetting database...$(NC)"
-	@echo "$(YELLOW)This will delete all data. Are you sure? [y/N]$(NC)" && read ans && [ $${ans:-N} = y ]
+	@echo "Resetting database..."
+	@echo "This will delete all data. Are you sure? [y/N]" && read ans && [ $${ans:-N} = y ]
 	$(NPM) run db:reset
-	@echo "$(GREEN)Database reset completed$(NC)"
+	@echo "Database reset completed"
 
 migrate: ## Run database migrations
-	@echo "$(GREEN)Running database migrations...$(NC)"
+	@echo "Running database migrations..."
 	$(NPM) run prisma:migrate
 
 seed: ## Seed database with test data
-	@echo "$(GREEN)Seeding database...$(NC)"
+	@echo "Seeding database..."
 	$(NPM) run prisma:seed
 
 reroll: ## Complete database reset: delete, create, migrate, and seed
-	@echo "$(GREEN)Starting complete database reroll...$(NC)"
-	@echo "$(RED)This will delete ALL data and recreate the database!$(NC)"
-	@echo "$(GREEN)Step 1: Resetting database...$(NC)"
+	@echo "Starting complete database reroll..."
+	@echo "This will delete ALL data and recreate the database!"
+	@echo "Step 1: Resetting database..."
 	$(NPM) run db:reset --force
-	@echo "$(GREEN)Step 2: Generating Prisma client...$(NC)"
+	@echo "Step 2: Generating Prisma client..."
 	$(NPM) run prisma:generate
-	@echo "$(GREEN)Step 3: Running migrations...$(NC)"
+	@echo "Step 3: Running migrations..."
 	$(NPM) run prisma:migrate
-	@echo "$(GREEN)Step 4: Seeding database...$(NC)"
+	@echo "Step 4: Seeding database..."
 	$(NPM) run prisma:seed
-	@echo "$(GREEN)✅ Database reroll completed successfully!$(NC)"
-	@echo "$(YELLOW)Your database is now ready to use with fresh test data.$(NC)"
+	@echo "Database reroll completed successfully!"
+	@echo "Your database is now ready to use with fresh test data."
 
 reroll-confirm: ## Complete database reset with confirmation prompt (Unix only)
-	@echo "$(GREEN)Starting complete database reroll...$(NC)"
+	@echo "Starting complete database reroll..."
 	@timeout /t 3 >nul 2>&1 || sleep 3 2>/dev/null || echo "Waiting 3 seconds..."
-	@echo "$(RED)This will delete ALL data and recreate the database!$(NC)"
-	@echo "$(YELLOW)Are you sure you want to continue? [y/N]$(NC)" && read ans && [ $${ans:-N} = y ]
-	@echo "$(GREEN)Step 1: Resetting database...$(NC)"
+	@echo "This will delete ALL data and recreate the database!"
+	@echo "Are you sure you want to continue? [y/N]" && read ans && [ $${ans:-N} = y ]
+	@echo "Step 1: Resetting database..."
 	$(NPM) run db:reset --force
-	@echo "$(GREEN)Step 2: Generating Prisma client...$(NC)"
+	@echo "Step 2: Generating Prisma client..."
 	$(NPM) run prisma:generate
-	@echo "$(GREEN)Step 3: Running migrations...$(NC)"
+	@echo "Step 3: Running migrations..."
 	$(NPM) run prisma:migrate
-	@echo "$(GREEN)Step 4: Seeding database...$(NC)"
+	@echo "Step 4: Seeding database..."
 	$(NPM) run prisma:seed
-	@echo "$(GREEN)✅ Database reroll completed successfully!$(NC)"
-	@echo "$(YELLOW)Your database is now ready to use with fresh test data.$(NC)"
+	@echo "Database reroll completed successfully!"
+	@echo "Your database is now ready to use with fresh test data."
 
 setup: db-up reroll ## Start services and setup database (complete development setup)
-	@echo "$(GREEN)✅ Complete development setup finished!$(NC)"
-	@echo "$(YELLOW)Database services are running and database is ready.$(NC)"
-	@echo "$(GREEN)You can now run 'make dev' to start the application.$(NC)"
+	@echo "Complete development setup finished!"
+	@echo "Database services are running and database is ready."
+	@echo "You can now run 'make dev' to start the application."
 
 test: ## Run tests
-	@echo "$(GREEN)Running tests...$(NC)"
+	@echo "Running tests..."
 	$(NPM) run test
 
 test-e2e: ## Run end-to-end tests
-	@echo "$(GREEN)Running e2e tests...$(NC)"
+	@echo "Running e2e tests..."
 	$(NPM) run test:e2e
 
 lint: ## Run linting
-	@echo "$(GREEN)Running linter...$(NC)"
+	@echo "Running linter..."
 	$(NPM) run lint
 
 format: ## Format code
-	@echo "$(GREEN)Formatting code...$(NC)"
+	@echo "Formatting code..."
 	$(NPM) run format
 
 logs: ## Show application logs
-	@echo "$(GREEN)Showing logs...$(NC)"
+	@echo "Showing logs..."
 	$(DOCKER_COMPOSE_DEV) logs -f
 
 db-logs: ## Show database logs
-	@echo "$(GREEN)Showing database logs...$(NC)"
+	@echo "Showing database logs..."
 	$(DOCKER_COMPOSE_DEV) logs -f postgres
 
 redis-logs: ## Show Redis logs
-	@echo "$(GREEN)Showing Redis logs...$(NC)"
+	@echo "Showing Redis logs..."
 	$(DOCKER_COMPOSE_DEV) logs -f redis
 
 status: ## Show service status
-	@echo "$(GREEN)Development Service Status:$(NC)"
+	@echo "Development Service Status:"
 	$(DOCKER_COMPOSE_DEV) ps
-	@echo "$(GREEN)Production Service Status:$(NC)"
+	@echo "Production Service Status:"
 	$(DOCKER_COMPOSE) ps
