@@ -24,46 +24,178 @@ A high-performance NestJS backend built with Fastify, PostgreSQL, and JWT authen
 
 ## 🛠️ Quick Start
 
-### 1. **Clone and Install**
+### Option 1: Cross-Platform Development (Recommended)
 ```bash
-git clone https://github.com/MuhammadAinurR/nestjs-performance-focused.git
-cd backend
+# Install dependencies
 npm install
+
+# Start development (auto-detects Docker/alternatives)
+npm run dev
+
+# Quick database setup
+npm run setup
 ```
 
-### 2. **Environment Setup**
+### Option 2: Traditional Make Commands
 ```bash
-# Copy environment template
-cp .env.example .env
+# Install dependencies
+make install
 
-# Edit configuration (update database credentials, JWT secrets, etc.)
-nano .env
-```
-
-**Important**: Update the following in your `.env` file:
-- `DATABASE_URL`: Your PostgreSQL connection string
-- `JWT_SECRET` & `JWT_REFRESH_SECRET`: Strong, unique secrets for production
-- `DB_USER`, `DB_PASSWORD`, `DB_NAME`: Your database credentials
-
-### 3. **Database Setup**
-```bash
-# Start database services
-make db-up
-
-# Initialize database with fresh data
-make reroll
-```
-
-### 4. **Start Development**
-```bash
-# Start development server with hot reload
+# Start database services and development server
 make dev
+
+# Complete database reset with fresh data
+make reroll
 ```
 
 **🎉 Your API is now running!**
 - **API Base**: http://localhost:3000
 - **Swagger Documentation**: http://localhost:3000/docs
 - **Health Check**: http://localhost:3000/health
+
+## 🐳 Docker Development Workflows
+
+### Development Workflow (Recommended)
+
+**Using docker-compose.dev.yml** - Only runs database services, your app runs locally:
+
+```bash
+# Start database and Redis only
+make db-up
+# OR
+docker compose -f docker-compose.dev.yml up -d
+
+# Start your app locally with hot reload
+make dev
+# OR
+npm run start:dev
+
+# Stop database services
+make db-down
+# OR
+docker compose -f docker-compose.dev.yml down
+```
+
+**Benefits:**
+- ✅ Fast development with hot reload
+- ✅ Easy debugging and development
+- ✅ Only database services in containers
+- ✅ Local Node.js environment
+
+### Production Workflow
+
+**Using docker-compose.yml** - Complete application stack:
+
+```bash
+# Build and start complete application stack
+make docker-up
+# OR
+docker compose up -d
+
+# View logs
+make docker-logs
+# OR
+docker compose logs -f
+
+# Stop all services
+make docker-down
+# OR
+docker compose down
+```
+
+**Benefits:**
+- ✅ Production-like environment
+- ✅ Complete containerized stack
+- ✅ Ready for deployment
+- ✅ Isolated application environment
+
+## 🔧 Makefile Commands Reference
+
+### Essential Development Commands
+```bash
+make help           # Show all available commands with descriptions
+make install        # Install/update dependencies
+make dev            # Start development server with database
+make build          # Build application for production
+make start          # Start production server
+```
+
+### Database Management Commands
+```bash
+make db-up          # Start PostgreSQL and Redis (development)
+make db-down        # Stop database containers
+make reroll         # 🔄 Complete database reset: delete → migrate → seed
+make migrate        # Run database migrations only
+make seed           # Seed database with test data
+make db-reset       # Reset database schema only
+```
+
+### Docker Commands
+```bash
+# Development (services only)
+make db-up          # Start database and Redis containers
+make db-down        # Stop development services
+
+# Production (full stack)
+make docker-up      # Start complete application with Docker
+make docker-down    # Stop all Docker services
+make docker-build   # Build Docker images
+make docker-logs    # Show all service logs
+```
+
+### Code Quality & Testing
+```bash
+make test           # Run unit tests
+make test-e2e       # Run end-to-end tests
+make lint           # Run ESLint with auto-fix
+make format         # Format code with Prettier
+```
+
+### Monitoring & Logs
+```bash
+make logs           # Show application logs
+make db-logs        # Show database logs
+make redis-logs     # Show Redis logs
+make status         # Show all service status
+make clean          # Clean containers and volumes
+```
+
+## 📋 Database Management Guide
+
+### Quick Database Reset (Most Common)
+```bash
+# Complete reset with fresh test data
+make reroll
+```
+This command will:
+1. 🗑️ Delete existing database
+2. 🏗️ Run all migrations
+3. 🌱 Seed with test data
+4. ✅ Ready to use with test users
+
+### Individual Database Operations
+```bash
+# Database lifecycle
+make db-up          # Start PostgreSQL and Redis containers
+make migrate        # Apply database schema changes
+make seed           # Add test data to database
+make db-down        # Stop database containers
+
+# Troubleshooting
+make db-reset       # Reset schema only (no seeding)
+make clean          # Clean all containers and volumes
+```
+
+### Test Data Access
+After running `make reroll` or `make seed`, you can use these test accounts:
+
+**User 1:**
+- **Email**: `john.doe@example.com`
+- **Password**: `password123`
+
+**User 2:**
+- **Email**: `rofiq@example.com`  
+- **Password**: `password123`
 
 ## 🎯 API Endpoints
 
@@ -125,6 +257,12 @@ curl http://localhost:3000/health
 make reroll  # Delete → Migrate → Seed with fresh test data
 ```
 
+**What `make reroll` does:**
+1. 🗑️ **Delete**: Removes all existing data and schema
+2. 🏗️ **Migrate**: Applies all database migrations
+3. 🌱 **Seed**: Adds fresh test data
+4. ✅ **Ready**: Database ready with test users
+
 ### Individual Database Commands
 ```bash
 make db-up       # Start PostgreSQL and Redis containers
@@ -138,6 +276,122 @@ make db-reset    # Reset database schema only
 The seed command creates test users:
 - **Email**: `john.doe@example.com` | **Password**: `password123`
 - **Email**: `rofiq@example.com` | **Password**: `password123`
+
+### Database Connection Strings
+
+**Development (Docker):**
+```env
+DATABASE_URL="postgresql://mpix_user:mpix_password@localhost:5433/mpix_db"
+```
+
+**Production (Docker):**
+```env
+DATABASE_URL="postgresql://mpix_user:mpix_password@postgres:5432/mpix_db"
+```
+
+**Local Installation:**
+```env
+DATABASE_URL="postgresql://your_user:your_password@localhost:5432/your_database"
+```
+
+## 🚨 Troubleshooting Guide
+
+### Docker Issues
+
+**Container Won't Start:**
+```bash
+# Check container status
+docker ps -a
+make status
+
+# View logs for specific issues
+make docker-logs
+docker compose logs postgres
+docker compose logs redis
+```
+
+**Port Already in Use:**
+```bash
+# Check what's using the port
+netstat -an | findstr :5433    # Windows
+netstat -an | grep :5433       # Linux/Mac
+
+# Stop conflicting services
+docker stop $(docker ps -q)    # Stop all containers
+make clean                      # Clean everything
+```
+
+**Database Connection Failed:**
+```bash
+# Ensure database is running
+make db-up
+make status
+
+# Check database logs
+make db-logs
+
+# Reset if corrupted
+make clean
+make reroll
+```
+
+### Application Issues
+
+**Build Failures:**
+```bash
+# Clean and reinstall
+npm ci
+make clean
+make docker-build
+
+# Check for missing dependencies
+npm audit
+npm run build
+```
+
+**Permission Errors (Linux/Mac):**
+```bash
+# Fix Docker permissions
+sudo chown -R $USER:$USER .
+sudo chmod +x Makefile
+
+# Or run with sudo
+sudo make docker-up
+```
+
+**Windows-Specific Issues:**
+```bash
+# Use cross-platform scripts
+npm run dev      # Instead of make dev
+npm run setup    # Instead of make reroll
+
+# Check Docker Desktop
+# Ensure Docker Desktop is running and accessible
+```
+
+### Performance Issues
+
+**Slow Database Queries:**
+```bash
+# Check database performance
+make db-logs
+
+# Reset with fresh data
+make reroll
+
+# Monitor application logs
+make logs
+```
+
+**Memory Issues:**
+```bash
+# Check container memory usage
+docker stats
+
+# Restart services
+make docker-down
+make docker-up
+```
 
 ## 🔧 Development Commands
 
@@ -213,113 +467,215 @@ CREATE TABLE "refresh_tokens" (
 - **Validation**: Input validation and sanitization
 - **Error Handling**: Global exception filter with structured responses
 
-## 🐳 Docker Configuration
+## 🐳 Docker Services Configuration
 
-### Services
+### Service Overview
+
+| Service | Development | Production | Port | Purpose |
+|---------|-------------|------------|------|---------|
+| **App** | Local Node.js | Docker Container | 3000 | NestJS Backend |
+| **PostgreSQL** | Docker Container | Docker Container | 5433→5432 | Main Database |
+| **Redis** | Docker Container | Docker Container | 6379 | Cache & Sessions |
+
+### Development Configuration (`docker-compose.dev.yml`)
+
+**PostgreSQL Database:**
 ```yaml
-## 🐳 Docker Configuration
-
-### Development vs Production
-
-**Development** (`docker-compose.dev.yml`):
-- Only database and Redis services
-- Your app runs locally with `make dev`
-- Optimized for development workflow
-
-**Production** (`docker-compose.yml`):
-- Complete application stack
-- App, database, and Redis all containerized
-- Ready for deployment
-
-### Services
-```yaml
-# Application (Production only)
-app:
-  image: mdc-backend:latest
-  port: 3000:3000
-  
-# PostgreSQL Database  
 postgres:
   image: postgres:15-alpine
+  container: mdc_postgres_dev
   port: 5433:5432
   database: mpix_db
-  
-# Redis Cache
+  user: mpix_user
+  password: mpix_password
+  volume: postgres_dev_data
+```
+
+**Redis Cache:**
+```yaml
 redis:
-  image: redis:7-alpine  
+  image: redis:7-alpine
+  container: mdc_redis_dev
   port: 6379:6379
-  max_memory: 512mb
+  config: appendonly=yes, maxmemory=512mb
+  volume: redis_dev_data
 ```
 
-### Quick Commands
+### Production Configuration (`docker-compose.yml`)
+
+**Complete Stack:**
+```yaml
+app:
+  build: Dockerfile
+  container: mdc_backend
+  port: 3000:3000
+  depends_on: [postgres, redis]
+  health_check: /health endpoint
+
+postgres:
+  image: postgres:15-alpine
+  container: mdc_postgres
+  port: 5433:5432
+  health_check: pg_isready
+
+redis:
+  image: redis:7-alpine
+  container: mdc_redis
+  port: 6379:6379
+  health_check: redis-cli ping
+```
+
+### Docker Command Quick Reference
+
+**Development Workflow:**
 ```bash
-# Development (services only)
-make db-up        # Start database & Redis
-make db-down      # Stop services
+# Services only (recommended for development)
+docker compose -f docker-compose.dev.yml up -d     # Start DB + Redis
+docker compose -f docker-compose.dev.yml down      # Stop services
+docker compose -f docker-compose.dev.yml ps        # Check status
+docker compose -f docker-compose.dev.yml logs -f   # View logs
 
-# Production (full stack)
-make docker-up    # Start complete application
-make docker-down  # Stop all services
-make docker-build # Build application image
+# With Makefile shortcuts
+make db-up          # Start development services
+make db-down        # Stop development services
+make status         # Check service status
+make db-logs        # View database logs
 ```
 
-### Environment Variables for Docker
-When running with Docker, the application uses these environment variables:
-```env
-DATABASE_URL="postgresql://mpix_user:mpix_password@postgres:5432/mpix_db"
-REDIS_HOST=redis
-REDIS_PORT=6379
-```
-```
-
-### Commands
+**Production Workflow:**
 ```bash
-# Start all services
-docker-compose up -d
+# Complete application stack
+docker compose up -d --build           # Build and start all services
+docker compose down                     # Stop all services
+docker compose ps                       # Check status
+docker compose logs -f app              # View app logs
+docker compose logs -f postgres         # View database logs
 
-# View service status
-docker-compose ps
+# With Makefile shortcuts
+make docker-up      # Start production stack
+make docker-down    # Stop all services
+make docker-build   # Build images
+make docker-logs    # View all logs
+```
 
-# View logs
-docker-compose logs -f postgres
+### Without Docker (Local Setup)
+If Docker isn't available, see our [Local Setup Guide](docs/LOCAL_SETUP.md) for:
+- **Windows**: PostgreSQL + Redis installation
+- **macOS**: Homebrew setup instructions  
+- **Linux**: APT/YUM package installation
+- **Alternatives**: Podman, Rancher Desktop, Colima
+
+```bash
+# Quick local setup test
+npm run dev  # Auto-detects Docker availability
 ```
 
 ## 🔐 Environment Configuration
 
-### Quick Setup
+### Quick Environment Setup
 ```bash
 # Copy the environment template
 cp .env.example .env
 
-# Edit your configuration
+# Edit your configuration (see below for mode-specific settings)
 nano .env
 ```
 
-### Required Environment Variables
-The `.env.example` file contains all necessary environment variables with documentation. Key variables to configure:
+### Configuration Modes
+
+The `.env.example` file provides configurations for three different setups:
+
+#### 🔧 **Development Mode** (Recommended)
+- **Use case**: Local development with hot reload
+- **Services**: Only database and Redis in Docker
+- **App**: Runs locally with Node.js
 
 ```env
-# Application
+# Development configuration in .env
 NODE_ENV=development
-PORT=3000
+DATABASE_URL="postgresql://mpix_user:mpix_password@localhost:5433/mpix_db?schema=public"
+REDIS_HOST=localhost
+REDIS_PORT=6379
+JWT_SECRET=dev-secret-key
+JWT_REFRESH_SECRET=dev-refresh-secret-key
+```
 
-# Database (Local Development)
-DATABASE_URL="postgresql://your_db_user:your_db_password@localhost:5432/mdcn"
+**Commands:**
+```bash
+make db-up      # Start database and Redis only
+make dev        # Start app locally with hot reload
+```
 
-# Database (Docker Development)  
-DATABASE_URL="postgresql://mpix_user:mpix_password@localhost:5433/mpix_db"
+#### 🐳 **Production Mode** (Docker Stack)
+- **Use case**: Production deployment or testing complete stack
+- **Services**: App, database, and Redis all in Docker
+- **Networking**: Internal Docker networking
 
-# JWT Security (CHANGE IN PRODUCTION!)
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-JWT_REFRESH_SECRET=your-super-secret-refresh-jwt-key-change-in-production
-JWT_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
+```env
+# Production configuration in .env
+NODE_ENV=production
+DATABASE_URL="postgresql://mpix_user:mpix_password@postgres:5432/mpix_db?schema=public"
+REDIS_HOST=redis
+REDIS_PORT=6379
+JWT_SECRET=your-strong-production-secret
+JWT_REFRESH_SECRET=your-strong-refresh-secret
+```
+
+**Commands:**
+```bash
+make docker-up  # Start complete Docker stack
+```
+
+#### 💻 **Local Installation Mode**
+- **Use case**: PostgreSQL and Redis installed locally (no Docker)
+- **Services**: All services run on local machine
+- **Networking**: Local networking
+
+```env
+# Local installation configuration in .env
+NODE_ENV=development
+DATABASE_URL="postgresql://your_username:your_password@localhost:5432/your_database?schema=public"
+REDIS_HOST=localhost
+REDIS_PORT=6379
+JWT_SECRET=your-local-secret-key
+JWT_REFRESH_SECRET=your-local-refresh-secret
+```
+
+### Required Environment Variables
+
+**Essential Configuration:**
+```env
+NODE_ENV=development          # Environment mode
+PORT=3000                     # Application port
+DATABASE_URL="postgresql://..." # Database connection string
+JWT_SECRET=your-secret        # JWT signing key
+JWT_REFRESH_SECRET=your-refresh-secret # Refresh token key
+```
+
+**Redis Configuration:**
+```env
+REDIS_HOST=localhost          # Redis hostname
+REDIS_PORT=6379              # Redis port
+REDIS_PASSWORD=              # Redis password (optional)
+REDIS_DB=0                   # Redis database number
+```
+
+**Security Settings:**
+```env
+JWT_EXPIRES_IN=15m           # Access token lifetime
+JWT_REFRESH_EXPIRES_IN=7d    # Refresh token lifetime
+CORS_ORIGIN=*                # CORS allowed origins
+THROTTLE_LIMIT=100           # Rate limiting
 ```
 
 ### Environment Templates
-- **`.env.example`**: Complete template with all available options
-- **`.env`**: Your local configuration (git-ignored)
-- **Docker**: Environment variables are configured in docker-compose.yml
+The `.env.example` file contains complete examples for all three modes with detailed comments explaining each configuration option.
+
+**Important Security Notes:**
+- 🔒 **Always change JWT secrets in production**
+- 🔒 **Use strong, unique passwords for database**
+- 🔒 **Restrict CORS origins in production**
+- 🔒 **Never commit `.env` file to version control**
 
 ## 📊 Project Structure
 
