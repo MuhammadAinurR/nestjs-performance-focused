@@ -104,8 +104,8 @@ install: ## Install dependencies
 	$(NPM) install
 
 dev: db-up ## Start development server with database
-	@echo "Starting development server..."
-	$(NPM) run start:dev
+	@echo "$(GREEN)Starting development server...$(NC)"
+	$(NPM) run dev
 
 build: ## Build the application
 	@echo "Building application..."
