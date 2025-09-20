@@ -5,7 +5,7 @@ export const mockUsers = {
     phone_number: '+1234567890',
     password: 'Password123!',
   },
-  
+
   anotherValidUser: {
     email: 'jane.smith@example.com',
     full_name: 'Jane Smith',
@@ -79,7 +79,7 @@ export const responseMessages = {
     userDataRetrieved: 'User data retrieved successfully',
     logoutSuccessful: 'Logout successful',
   },
-  
+
   error: {
     userAlreadyExists: 'User with this email already exists',
     invalidCredentials: 'Invalid email or password',

@@ -4,12 +4,12 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { 
-  mockUsers, 
-  mockLoginCredentials, 
+import {
+  mockUsers,
+  mockLoginCredentials,
   mockTokens,
   expectedResponseFormat,
-  responseMessages 
+  responseMessages
 } from '../utils/mock-data';
 
 describe('Authentication (e2e)', () => {
@@ -27,7 +27,7 @@ describe('Authentication (e2e)', () => {
         logger: false,
       }),
     );
-    
+
     // Apply the same validation pipe as in main.ts
     app.useGlobalPipes(
       new ValidationPipe({
@@ -39,7 +39,7 @@ describe('Authentication (e2e)', () => {
 
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
-    
+
     prisma = moduleFixture.get<PrismaService>(PrismaService);
   });
 
@@ -398,7 +398,7 @@ describe('Authentication (e2e)', () => {
         .send({ refresh_token })
         .expect(201);
 
-            const newAccessToken = refreshResponse.body.payload.tokens.access_token;
+      const newAccessToken = refreshResponse.body.payload.tokens.access_token;
 
       // 5. Use new token to get profile
       const newProfileResponse = await request(app.getHttpServer())
@@ -420,7 +420,7 @@ describe('Authentication (e2e)', () => {
       const finalResponse = await request(app.getHttpServer())
         .get('/auth/me')
         .set('Authorization', `Bearer ${newAccessToken}`);
-      
+
       // Either token is invalidated (401) or still valid until expiry (200)
       expect([200, 401]).toContain(finalResponse.status);
     });

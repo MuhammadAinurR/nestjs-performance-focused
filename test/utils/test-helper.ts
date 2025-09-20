@@ -13,7 +13,7 @@ export class TestHelper {
     const module: TestingModule = await Test.createTestingModule(moduleMetadata).compile();
 
     const app = module.createNestApplication();
-    
+
     // Setup global pipes, filters, etc. similar to main.ts
     await app.init();
 

@@ -56,14 +56,14 @@ describe('HealthService', () => {
     it('should include timestamp in ISO format', async () => {
       const result = await service.getHealthCheck();
       const timestamp = new Date(result.timestamp);
-      
+
       expect(timestamp).toBeInstanceOf(Date);
       expect(timestamp.getTime()).not.toBeNaN();
     });
 
     it('should include positive uptime', async () => {
       const result = await service.getHealthCheck();
-      
+
       expect(result.payload.data.uptime).toBeGreaterThanOrEqual(0);
     });
   });
